@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaseCiter Tag Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+        }
+
+        .tag-button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tag-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start pt-16 md:pt-32 px-6 pb-20">
+
+    <div class="w-full max-w-3xl">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-2xl font-bold text-slate-900 mb-2 tracking-tight">CaseCiter Cloud</h1>
+            <p class="text-slate-500 text-sm">Quick access to latest SC judgments subject-wise</p>
+        </div>
+
+        <!-- Tag Cloud Container -->
+        <div id="tag-cloud" class="flex flex-wrap justify-center gap-3">
+            <!-- Buttons are injected here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const lawTags = [
+            { label: "Constitution", url: "https://www.caseciter.com/tag/constitution/" },
+            { label: "CPC", url: "https://www.caseciter.com/tag/cpc/" },
+            { label: "CrPC-BNSS", url: "https://www.caseciter.com/tag/crpc/" },
+            { label: "Arbitration", url: "https://www.caseciter.com/tag/arbitration/" },
+            { label: "Evidence", url: "https://www.caseciter.com/tag/evidence" },
+            { label: "IPC-BNS", url: "https://www.caseciter.com/tag/ipc/" },
+            { label: "POCSO", url: "https://www.caseciter.com/tag/pocso/" },
+            { label: "NI Act", url: "https://www.caseciter.com/tag/ni/" },
+            { label: "Companies Act", url: "https://www.caseciter.com/tag/company/" },
+            { label: "Limitation", url: "https://www.caseciter.com/tag/limitation/" },
+            { label: "Contract", url: "https://www.caseciter.com/tag/contract/" },
+            { label: "PMLA", url: "https://www.caseciter.com/tag/pmla/" }
+        ];
+
+        const cloud = document.getElementById('tag-cloud');
+
+        function renderCloud() {
+            cloud.innerHTML = '';
+            lawTags.forEach((tag) => {
+                const btn = document.createElement('button');
+                btn.className = "tag-button px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-semibold text-slate-700 shadow-sm flex items-center gap-2";
+                btn.innerHTML = `<span>${tag.label}</span>`;
+                btn.onclick = () => window.open(tag.url, '_blank');
+                cloud.appendChild(btn);
+            });
+        }
+
+        renderCloud();
+    </script>
+</body>
+</html>
