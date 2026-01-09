@@ -12,6 +12,7 @@
             font-family: 'Inter', sans-serif;
             background: #ffffff;
             min-height: 100vh;
+            overflow: hidden; /* Prevent scrolling when locked */
         }
 
         .tag-button {
@@ -25,6 +26,19 @@
             color: #2563eb;
         }
 
+        .daily-digest-btn {
+            background-color: #1e293b;
+            color: white !important;
+            border-color: #0f172a;
+        }
+
+        .daily-digest-btn:hover {
+            background-color: #0f172a;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
         .back-button {
             border-style: dashed;
             color: #64748b;
@@ -35,7 +49,51 @@
             background-color: #f1f5f9;
         }
 
-        /* Smooth fade in for buttons */
+        /* Lock Screen Styles */
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .lock-input {
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+
+        .lock-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Tiny Box styling for choices */
+        .tiny-box {
+            padding: 4px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .tiny-box:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+
+        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
@@ -44,32 +102,185 @@
         .tag-animate {
             animation: fadeIn 0.3s ease forwards;
         }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-start pt-16 md:pt-32 px-6 pb-20">
 
-    <div class="w-full max-w-4xl flex flex-col items-center">
+    <!-- Lock Screen Overlay -->
+    <div id="lock-screen">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-slate-900 mb-1 tracking-tight">CaseCiter</h1>
+            <p class="text-slate-600 font-medium text-xl">Tag Browser</p>
+        </div>
+        
+        <div class="w-full max-w-xs">
+            <p class="text-slate-500 text-sm text-center mb-4 font-medium">Please enter access code to unlock</p>
+            <input type="password" 
+                   id="unlock-input" 
+                   placeholder="" 
+                   maxlength="8"
+                   class="lock-input w-full px-4 py-3 rounded-xl text-lg font-semibold text-slate-700 mb-4 bg-slate-50"
+                   oninput="checkCode(this)">
+            <div id="lock-error-container" class="text-xs text-center mt-3 opacity-0 transition-opacity">
+                <!-- Dynamic error content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (Hidden until unlocked) -->
+    <div id="main-content" class="w-full max-w-4xl flex flex-col items-center opacity-0 transition-opacity duration-500">
         <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold text-slate-900 mb-1 tracking-tight">CaseCiter</h1>
-            <p class="text-slate-600 font-medium text-lg mb-2">Tag Browser</p>
-            <p id="view-subtitle" class="text-slate-500 text-sm"></p>
+            <p class="text-slate-600 font-medium text-lg mb-1">Tag Browser</p>
+            <p id="view-subtitle" class="text-slate-500 text-sm h-5 mt-2"></p>
         </div>
 
         <!-- Tag Cloud Container -->
-        <div id="tag-cloud" class="flex flex-wrap justify-center gap-3 mb-16">
+        <div id="tag-cloud" class="flex flex-wrap justify-center gap-3 mb-12">
             <!-- Buttons are injected here by JavaScript -->
         </div>
 
-        <!-- Disclaimer -->
-        <div class="mt-auto pt-10 border-t border-slate-100 w-full max-w-md text-center">
-            <p class="text-slate-400 text-xs italic leading-relaxed">
-                Disclaimer: Find Latest Supreme Court Judgments (Since 2026) subject wise.
-            </p>
+        <!-- Footer Section -->
+        <div class="mt-auto flex flex-col items-center w-full max-w-lg">
+            <!-- Daily Digest Link -->
+            <div id="digest-container" class="mb-8">
+                <!-- Dynamic button injected here -->
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="pt-8 border-t border-slate-100 w-full text-center">
+                <p class="text-slate-400 text-xs italic leading-relaxed mb-1">
+                    Note: We are still developing this web-app. Some subjects are yet to be updated.
+                </p>
+                <p class="text-slate-400 text-[10px] uppercase tracking-wider font-semibold opacity-70">
+                    Find Latest Supreme Court Judgments (Since 2026) subject wise.
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
+        // Security logic
+        function checkCode(input) {
+            // Clear error if user starts typing again
+            if (input.value.length < 8) {
+                document.getElementById('lock-error-container').classList.add('opacity-0');
+            }
+            if (input.value.length === 8) {
+                verifyLock();
+            }
+        }
+
+        function verifyLock() {
+            const input = document.getElementById('unlock-input');
+            const container = document.getElementById('lock-error-container');
+            const lockScreen = document.getElementById('lock-screen');
+            const mainContent = document.getElementById('main-content');
+            
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = String(today.getFullYear());
+            const correctPass = `${dd}${mm}${yyyy}`;
+
+            if (input.value === correctPass) {
+                // Success
+                lockScreen.style.display = 'none';
+                mainContent.classList.remove('opacity-0');
+                document.body.style.overflow = 'auto';
+                renderView('main');
+            } else {
+                // Failure
+                input.classList.add('shake');
+                container.innerHTML = `
+                    <div class="text-slate-800 space-y-3">
+                        <p class="text-red-500 font-bold mb-1">Access Denied</p>
+                        <p class="mb-2 text-slate-500">Are you a subscriber?</p>
+                        <div class="flex justify-center gap-2">
+                            <button onclick="handleSubscriberChoice('yes')" class="tiny-box">YES</button>
+                            <button onclick="handleSubscriberChoice('no')" class="tiny-box">NO</button>
+                        </div>
+                    </div>
+                `;
+                container.classList.remove('opacity-0');
+                setTimeout(() => {
+                    input.classList.remove('shake');
+                    input.value = '';
+                }, 400);
+            }
+        }
+
+        function handleSubscriberChoice(choice) {
+            const container = document.getElementById('lock-error-container');
+            if (choice === 'yes') {
+                container.innerHTML = `
+                    <p class="text-slate-600 leading-relaxed font-medium">
+                        Please contact us on WhatsApp or X.
+                    </p>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-slate-800 space-y-3">
+                        <p class="mb-2 text-slate-500">Do you want to subscribe?</p>
+                        <div class="flex justify-center gap-2">
+                            <button onclick="handleSubscriptionInterest('yes')" class="tiny-box">YES</button>
+                            <button onclick="handleSubscriptionInterest('no')" class="tiny-box">NO</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function handleSubscriptionInterest(choice) {
+            const container = document.getElementById('lock-error-container');
+            if (choice === 'yes') {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-2">
+                        <button onclick="window.open('https://citecase.in/register', '_blank')" 
+                                class="tiny-box bg-blue-50 border-blue-200 text-blue-700 py-2 w-full max-w-[180px]">
+                            Register @ CiteCase.in
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <p class="text-slate-600 leading-relaxed font-medium">
+                        See you later 😊
+                    </p>
+                `;
+            }
+        }
+
+        // Helper to get formatted today's date for the Daily Digest URL (ddmmyyyy)
+        function getTodayDigestUrl() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = String(today.getFullYear());
+            return `https://www.caseciter.com/${dd}${mm}${yyyy}`;
+        }
+
+        // Helper to get formatted display date (dd-mm-yyyy)
+        function getDisplayDate() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = String(today.getFullYear());
+            return `${dd}-${mm}-${yyyy}`;
+        }
+
         // Main view laws
         const mainLaws = [
             { label: "Constitution", url: "https://www.caseciter.com/tag/constitution/" },
@@ -84,7 +295,7 @@
             { label: "Others", isGroup: true, target: 'others' }
         ];
 
-        // Civil group
+        // Group data definitions
         const civilLaws = [
             { label: "CPC", url: "https://www.caseciter.com/tag/cpc/" },
             { label: "Contract", url: "https://www.caseciter.com/tag/contract/" },
@@ -93,7 +304,6 @@
             { label: "SRA", url: "https://www.caseciter.com/tag/specific-relief-act/" }
         ];
 
-        // Criminal group
         const criminalLaws = [
             { label: "IPC-BNS", url: "https://www.caseciter.com/tag/indian-penal-code/" },
             { label: "CrPC", isGroup: true, target: 'crpc_sub' }, 
@@ -107,21 +317,18 @@
             { label: "Juvenile Justice", url: "https://www.caseciter.com/tag/juvenile-justice-act/#gsc.tab=0" }
         ];
 
-        // CrPC specific sub-group
         const crpcSubLaws = [
             { label: "All", url: "https://www.caseciter.com/tag/crpc/" },
             { label: "Bail", url: "https://www.caseciter.com/tag/bail/" },
             { label: "Quashing", url: "https://www.caseciter.com/tag/section-482-crpc/" }
         ];
 
-        // Corporate group
         const corporateLaws = [
             { label: "Companies Act", url: "https://www.caseciter.com/tag/company/" },
             { label: "IBC", url: "https://www.caseciter.com/tag/insolvency-and-bankruptcy-code" },
             { label: "Competition Act", url: "https://www.caseciter.com/tag/competition-act" }
         ];
 
-        // Family group
         const familyLaws = [
             { label: "Matrimonial", url: "https://www.caseciter.com/tag/matrimonial/" },
             { label: "Hindu Marriage Act", url: "https://www.caseciter.com/tag/hindu-marriage-act/" },
@@ -129,14 +336,12 @@
             { label: "Guardianship", url: "https://www.caseciter.com/tag/guardianship/" }
         ];
 
-        // IPR group
         const iprLaws = [
             { label: "Trademark", url: "https://www.caseciter.com/tag/trademark/" },
             { label: "Copyright", url: "https://www.caseciter.com/tag/copyright/" },
             { label: "Patents", url: "https://www.caseciter.com/tag/patent/" }
         ];
 
-        // Taxation group
         const taxationLaws = [
             { label: "Income Tax", url: "https://www.caseciter.com/tag/income-tax/" },
             { label: "GST", url: "https://www.caseciter.com/tag/gst/" },
@@ -144,7 +349,6 @@
             { label: "Excise", url: "https://www.caseciter.com/tag/excise/" }
         ];
 
-        // Others group
         const othersLaws = [
             { label: "Service Law", url: "https://www.caseciter.com/tag/service-law/" },
             { label: "Labour Law", url: "https://www.caseciter.com/tag/labour-law/" },
@@ -155,6 +359,7 @@
 
         const cloud = document.getElementById('tag-cloud');
         const subtitle = document.getElementById('view-subtitle');
+        const digestContainer = document.getElementById('digest-container');
 
         const viewHierarchy = {
             'civil': 'main',
@@ -172,42 +377,29 @@
             let currentList;
             let subtitleText;
 
+            if (viewType === 'main') {
+                const digestUrl = getTodayDigestUrl();
+                const displayDate = getDisplayDate();
+                digestContainer.innerHTML = `
+                    <button onclick="window.open('${digestUrl}', '_blank')" 
+                            class="daily-digest-btn tag-button px-6 py-2.5 rounded-full text-xs font-bold shadow-sm flex items-center gap-2 tag-animate">
+                        <span>Access Supreme Court Daily Digest (${displayDate})</span>
+                    </button>
+                `;
+            } else {
+                digestContainer.innerHTML = '';
+            }
+
             switch(viewType) {
-                case 'civil':
-                    currentList = civilLaws;
-                    subtitleText = "Civil Law Judgments";
-                    break;
-                case 'criminal':
-                    currentList = criminalLaws;
-                    subtitleText = "Criminal Law Judgments";
-                    break;
-                case 'crpc_sub':
-                    currentList = crpcSubLaws;
-                    subtitleText = "CrPC & BNSS Judgments";
-                    break;
-                case 'corporate':
-                    currentList = corporateLaws;
-                    subtitleText = "Corporate Law Judgments";
-                    break;
-                case 'family':
-                    currentList = familyLaws;
-                    subtitleText = "Family Law Judgments";
-                    break;
-                case 'ipr':
-                    currentList = iprLaws;
-                    subtitleText = "IPR Law Judgments";
-                    break;
-                case 'taxation':
-                    currentList = taxationLaws;
-                    subtitleText = "Taxation Law Judgments";
-                    break;
-                case 'others':
-                    currentList = othersLaws;
-                    subtitleText = "Miscellaneous Legal Subjects";
-                    break;
-                default:
-                    currentList = mainLaws;
-                    subtitleText = ""; // Removed subtitle for main view
+                case 'civil': currentList = civilLaws; subtitleText = "Civil Law Judgments"; break;
+                case 'criminal': currentList = criminalLaws; subtitleText = "Criminal Law Judgments"; break;
+                case 'crpc_sub': currentList = crpcSubLaws; subtitleText = "CrPC & BNSS Judgments"; break;
+                case 'corporate': currentList = corporateLaws; subtitleText = "Corporate Law Judgments"; break;
+                case 'family': currentList = familyLaws; subtitleText = "Family Law Judgments"; break;
+                case 'ipr': currentList = iprLaws; subtitleText = "IPR Law Judgments"; break;
+                case 'taxation': currentList = taxationLaws; subtitleText = "Taxation Law Judgments"; break;
+                case 'others': currentList = othersLaws; subtitleText = "Miscellaneous Legal Subjects"; break;
+                default: currentList = mainLaws; subtitleText = ""; 
             }
             
             subtitle.innerText = subtitleText;
@@ -236,8 +428,6 @@
                 cloud.appendChild(btn);
             });
         }
-
-        renderView('main');
     </script>
 </body>
 </html>
