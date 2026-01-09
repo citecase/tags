@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CaseCiter</title>
+    <title>CaseCiter Tag Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -24,53 +24,220 @@
             border-color: #3b82f6;
             color: #2563eb;
         }
+
+        .back-button {
+            border-style: dashed;
+            color: #64748b;
+        }
+        
+        .back-button:hover {
+            border-style: solid;
+            background-color: #f1f5f9;
+        }
+
+        /* Smooth fade in for buttons */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tag-animate {
+            animation: fadeIn 0.3s ease forwards;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-start pt-16 md:pt-32 px-6 pb-20">
 
-    <div class="w-full max-w-3xl">
+    <div class="w-full max-w-4xl flex flex-col items-center">
         <!-- Header -->
         <div class="text-center mb-10">
-            <h1 class="text-2xl font-bold text-slate-900 mb-2 tracking-tight">CaseCiter Cloud</h1>
-            <p class="text-slate-500 text-sm">Quick access to latest SC judgments subject-wise</p>
+            <h1 class="text-3xl font-bold text-slate-900 mb-1 tracking-tight">CaseCiter</h1>
+            <p class="text-slate-600 font-medium text-lg mb-2">Tag Browser</p>
+            <p id="view-subtitle" class="text-slate-500 text-sm"></p>
         </div>
 
         <!-- Tag Cloud Container -->
-        <div id="tag-cloud" class="flex flex-wrap justify-center gap-3">
+        <div id="tag-cloud" class="flex flex-wrap justify-center gap-3 mb-16">
             <!-- Buttons are injected here by JavaScript -->
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="mt-auto pt-10 border-t border-slate-100 w-full max-w-md text-center">
+            <p class="text-slate-400 text-xs italic leading-relaxed">
+                Disclaimer: Find Latest Supreme Court Judgments (Since 2026) subject wise.
+            </p>
         </div>
     </div>
 
     <script>
-        const lawTags = [
+        // Main view laws
+        const mainLaws = [
             { label: "Constitution", url: "https://www.caseciter.com/tag/constitution/" },
-            { label: "CPC", url: "https://www.caseciter.com/tag/cpc/" },
-            { label: "CrPC-BNSS", url: "https://www.caseciter.com/tag/crpc/" },
+            { label: "Civil", isGroup: true, target: 'civil' }, 
+            { label: "Criminal", isGroup: true, target: 'criminal' },
             { label: "Arbitration", url: "https://www.caseciter.com/tag/arbitration/" },
+            { label: "Corporate", isGroup: true, target: 'corporate' },
+            { label: "Family", isGroup: true, target: 'family' },
+            { label: "IPR", isGroup: true, target: 'ipr' },
+            { label: "Taxation", isGroup: true, target: 'taxation' },
+            { label: "Environment", url: "https://www.caseciter.com/tag/environmental-law/" },
+            { label: "Others", isGroup: true, target: 'others' }
+        ];
+
+        // Civil group
+        const civilLaws = [
+            { label: "CPC", url: "https://www.caseciter.com/tag/cpc/" },
+            { label: "Contract", url: "https://www.caseciter.com/tag/contract/" },
+            { label: "Limitation", url: "https://www.caseciter.com/tag/limitation/" },
+            { label: "Property", url: "https://www.caseciter.com/tag/transfer-of-property-act/" },
+            { label: "SRA", url: "https://www.caseciter.com/tag/specific-relief-act/" }
+        ];
+
+        // Criminal group
+        const criminalLaws = [
+            { label: "IPC-BNS", url: "https://www.caseciter.com/tag/indian-penal-code/" },
+            { label: "CrPC", isGroup: true, target: 'crpc_sub' }, 
             { label: "Evidence", url: "https://www.caseciter.com/tag/evidence" },
-            { label: "IPC-BNS", url: "https://www.caseciter.com/tag/ipc/" },
             { label: "POCSO", url: "https://www.caseciter.com/tag/pocso/" },
             { label: "NI Act", url: "https://www.caseciter.com/tag/ni/" },
+            { label: "PMLA", url: "https://www.caseciter.com/tag/pmla/" },
+            { label: "NDPS", url: "https://www.caseciter.com/tag/ndps/" },
+            { label: "UAPA", url: "https://www.caseciter.com/tag/uapa/" },
+            { label: "PC Act", url: "https://www.caseciter.com/tag/prevention-of-corruption-act/" },
+            { label: "Juvenile Justice", url: "https://www.caseciter.com/tag/juvenile-justice-act/#gsc.tab=0" }
+        ];
+
+        // CrPC specific sub-group
+        const crpcSubLaws = [
+            { label: "All", url: "https://www.caseciter.com/tag/crpc/" },
+            { label: "Bail", url: "https://www.caseciter.com/tag/bail/" },
+            { label: "Quashing", url: "https://www.caseciter.com/tag/section-482-crpc/" }
+        ];
+
+        // Corporate group
+        const corporateLaws = [
             { label: "Companies Act", url: "https://www.caseciter.com/tag/company/" },
-            { label: "Limitation", url: "https://www.caseciter.com/tag/limitation/" },
-            { label: "Contract", url: "https://www.caseciter.com/tag/contract/" },
-            { label: "PMLA", url: "https://www.caseciter.com/tag/pmla/" }
+            { label: "IBC", url: "https://www.caseciter.com/tag/insolvency-and-bankruptcy-code" },
+            { label: "Competition Act", url: "https://www.caseciter.com/tag/competition-act" }
+        ];
+
+        // Family group
+        const familyLaws = [
+            { label: "Matrimonial", url: "https://www.caseciter.com/tag/matrimonial/" },
+            { label: "Hindu Marriage Act", url: "https://www.caseciter.com/tag/hindu-marriage-act/" },
+            { label: "Maintenance", url: "https://www.caseciter.com/tag/maintenance/" },
+            { label: "Guardianship", url: "https://www.caseciter.com/tag/guardianship/" }
+        ];
+
+        // IPR group
+        const iprLaws = [
+            { label: "Trademark", url: "https://www.caseciter.com/tag/trademark/" },
+            { label: "Copyright", url: "https://www.caseciter.com/tag/copyright/" },
+            { label: "Patents", url: "https://www.caseciter.com/tag/patent/" }
+        ];
+
+        // Taxation group
+        const taxationLaws = [
+            { label: "Income Tax", url: "https://www.caseciter.com/tag/income-tax/" },
+            { label: "GST", url: "https://www.caseciter.com/tag/gst/" },
+            { label: "Customs", url: "https://www.caseciter.com/tag/customs/" },
+            { label: "Excise", url: "https://www.caseciter.com/tag/excise/" }
+        ];
+
+        // Others group
+        const othersLaws = [
+            { label: "Service Law", url: "https://www.caseciter.com/tag/service-law/" },
+            { label: "Labour Law", url: "https://www.caseciter.com/tag/labour-law/" },
+            { label: "Motor Vehicles", url: "https://www.caseciter.com/tag/motor-vehicles-act/" },
+            { label: "Consumer", url: "https://www.caseciter.com/tag/consumer-protection/" },
+            { label: "Rent Control", url: "https://www.caseciter.com/tag/rent-control/" }
         ];
 
         const cloud = document.getElementById('tag-cloud');
+        const subtitle = document.getElementById('view-subtitle');
 
-        function renderCloud() {
+        const viewHierarchy = {
+            'civil': 'main',
+            'criminal': 'main',
+            'corporate': 'main',
+            'family': 'main',
+            'ipr': 'main',
+            'taxation': 'main',
+            'others': 'main',
+            'crpc_sub': 'criminal'
+        };
+
+        function renderView(viewType) {
             cloud.innerHTML = '';
-            lawTags.forEach((tag) => {
+            let currentList;
+            let subtitleText;
+
+            switch(viewType) {
+                case 'civil':
+                    currentList = civilLaws;
+                    subtitleText = "Civil Law Judgments";
+                    break;
+                case 'criminal':
+                    currentList = criminalLaws;
+                    subtitleText = "Criminal Law Judgments";
+                    break;
+                case 'crpc_sub':
+                    currentList = crpcSubLaws;
+                    subtitleText = "CrPC & BNSS Judgments";
+                    break;
+                case 'corporate':
+                    currentList = corporateLaws;
+                    subtitleText = "Corporate Law Judgments";
+                    break;
+                case 'family':
+                    currentList = familyLaws;
+                    subtitleText = "Family Law Judgments";
+                    break;
+                case 'ipr':
+                    currentList = iprLaws;
+                    subtitleText = "IPR Law Judgments";
+                    break;
+                case 'taxation':
+                    currentList = taxationLaws;
+                    subtitleText = "Taxation Law Judgments";
+                    break;
+                case 'others':
+                    currentList = othersLaws;
+                    subtitleText = "Miscellaneous Legal Subjects";
+                    break;
+                default:
+                    currentList = mainLaws;
+                    subtitleText = ""; // Removed subtitle for main view
+            }
+            
+            subtitle.innerText = subtitleText;
+
+            if (viewType !== 'main') {
+                const backBtn = document.createElement('button');
+                backBtn.className = "tag-button back-button px-6 py-2.5 border border-slate-300 rounded-full text-sm font-semibold shadow-sm flex items-center gap-2 tag-animate";
+                backBtn.innerHTML = `<span>Back</span>`;
+                backBtn.onclick = () => renderView(viewHierarchy[viewType] || 'main');
+                cloud.appendChild(backBtn);
+            }
+
+            currentList.forEach((tag, index) => {
                 const btn = document.createElement('button');
-                btn.className = "tag-button px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-semibold text-slate-700 shadow-sm flex items-center gap-2";
-                btn.innerHTML = `<span>${tag.label}</span>`;
-                btn.onclick = () => window.open(tag.url, '_blank');
+                btn.className = "tag-button px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-semibold text-slate-700 shadow-sm flex items-center gap-2 tag-animate";
+                btn.style.animationDelay = `${index * 0.05}s`;
+                
+                if (tag.isGroup) {
+                    btn.innerHTML = `<span>${tag.label}</span>`;
+                    btn.classList.add('bg-slate-50', 'border-slate-300');
+                    btn.onclick = () => renderView(tag.target);
+                } else {
+                    btn.innerHTML = `<span>${tag.label}</span>`;
+                    btn.onclick = () => window.open(tag.url, '_blank');
+                }
                 cloud.appendChild(btn);
             });
         }
 
-        renderCloud();
+        renderView('main');
     </script>
 </body>
 </html>
